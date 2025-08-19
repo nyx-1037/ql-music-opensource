@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.musicmanager.system.mapper.QlUserFollowMapper">
+    
+    <resultMap type="QlUserFollow" id="QlUserFollowResult">
+        <result property="id"    column="id"    />
+        <result property="followerId"    column="follower_id"    />
+        <result property="followingId"    column="following_id"    />
+        <result property="createdAt"    column="created_at"    />
+    </resultMap>
+
+    <sql id="selectQlUserFollowVo">
+        select id, follower_id, following_id, created_at from ql_user_follow
+    </sql>
+
+    <select id="selectQlUserFollowList" parameterType="QlUserFollow" resultMap="QlUserFollowResult">
+        <include refid="selectQlUserFollowVo"/>
+        <where>  
+            <if test="followerId != null "> and follower_id = #{followerId}</if>
+            <if test="followingId != null "> and following_id = #{followingId}</if>
+            <if test="createdAt != null "> and created_at = #{createdAt}</if>
+        </where>
+    </select>
+    
+    <select id="selectQlUserFollowById" parameterType="Long" resultMap="QlUserFollowResult">
+        <include refid="selectQlUserFollowVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertQlUserFollow" parameterType="QlUserFollow" useGeneratedKeys="true" keyProperty="id">
+        insert into ql_user_follow
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="followerId != null">follower_id,</if>
+            <if test="followingId != null">following_id,</if>
+            <if test="createdAt != null">created_at,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="followerId != null">#{followerId},</if>
+            <if test="followingId != null">#{followingId},</if>
+            <if test="createdAt != null">#{createdAt},</if>
+         </trim>
+    </insert>
+
+    <update id="updateQlUserFollow" parameterType="QlUserFollow">
+        update ql_user_follow
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="followerId != null">follower_id = #{followerId},</if>
+            <if test="followingId != null">following_id = #{followingId},</if>
+            <if test="createdAt != null">created_at = #{createdAt},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteQlUserFollowById" parameterType="Long">
+        delete from ql_user_follow where id = #{id}
+    </delete>
+
+    <delete id="deleteQlUserFollowByIds" parameterType="String">
+        delete from ql_user_follow where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

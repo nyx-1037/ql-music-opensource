@@ -1,0 +1,217 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.nyx.musicPlatform.mapper.MusicCommentMapper">
+
+    <!-- 结果映射 -->    
+    <resultMap id="BaseResultMap" type="com.nyx.musicPlatform.entity.MusicComment">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="user_id" property="userId" jdbcType="BIGINT"/>
+        <result column="music_id" property="musicId" jdbcType="BIGINT"/>
+        <result column="content" property="content" jdbcType="LONGVARCHAR"/>
+        <result column="parent_id" property="parentId" jdbcType="BIGINT"/>
+        <result column="like_count" property="likeCount" jdbcType="INTEGER"/>
+        <result column="status" property="status" jdbcType="TINYINT"/>
+        <result column="create_time" property="createTime" jdbcType="TIMESTAMP"/>
+        <result column="update_time" property="updateTime" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <!-- 评论详情结果映射（包含用户信息） -->
+    <resultMap id="CommentDetailResultMap" type="com.nyx.musicPlatform.entity.MusicComment">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="user_id" property="userId" jdbcType="BIGINT"/>
+        <result column="music_id" property="musicId" jdbcType="BIGINT"/>
+        <result column="content" property="content" jdbcType="LONGVARCHAR"/>
+        <result column="parent_id" property="parentId" jdbcType="BIGINT"/>
+        <result column="like_count" property="likeCount" jdbcType="INTEGER"/>
+        <result column="status" property="status" jdbcType="TINYINT"/>
+        <result column="create_time" property="createTime" jdbcType="TIMESTAMP"/>
+        <result column="update_time" property="updateTime" jdbcType="TIMESTAMP"/>
+        <!-- 扩展字段 -->
+        <result column="username" property="username" jdbcType="VARCHAR"/>
+        <result column="avatar" property="avatar" jdbcType="VARCHAR"/>
+        <result column="reply_count" property="replyCount" jdbcType="INTEGER"/>
+        <result column="is_liked" property="isLiked" jdbcType="BOOLEAN"/>
+    </resultMap>
+
+    <!-- 基础字段 -->
+    <sql id="Base_Column_List">
+        id, user_id, music_id, content, parent_id, like_count, status, create_time, update_time
+    </sql>
+
+    <!-- 评论详情字段（包含用户信息） -->
+    <sql id="Detail_Column_List">
+        c.id, c.user_id, c.music_id, c.content, c.parent_id, c.like_count, 
+        c.status, c.create_time, c.update_time,
+        u.username, u.avatar_url as avatar
+    </sql>
+
+    <!-- 根据音乐ID和用户ID分页查询评论 -->
+    <select id="selectByMusicIdAndUserIdPage" resultMap="CommentDetailResultMap">
+        SELECT 
+        <include refid="Detail_Column_List"/>,
+        (
+            SELECT COUNT(1) 
+            FROM ql_music_comment r 
+            WHERE r.parent_id = c.id AND r.status = 1
+        ) AS reply_count,
+        (
+            SELECT COUNT(1) > 0
+            FROM ql_comment_like cl
+            WHERE cl.comment_id = c.id AND cl.user_id = #{currentUserId}
+        ) AS is_liked
+        FROM ql_music_comment c
+        INNER JOIN ql_user u ON c.user_id = u.id
+        WHERE c.music_id = #{musicId}
+          AND c.status = 1
+          AND u.is_deleted = 0
+        <if test="userId != null">
+            AND c.user_id = #{userId}
+        </if>
+        <if test="parentId != null">
+            AND c.parent_id = #{parentId}
+        </if>
+        <if test="parentId == null">
+            AND c.parent_id IS NULL
+        </if>
+        ORDER BY 
+        <choose>
+            <when test="sortBy == 'hot'">
+                c.like_count DESC, c.create_time DESC
+            </when>
+            <otherwise>
+                c.create_time DESC
+            </otherwise>
+        </choose>
+    </select>
+
+    <!-- 根据父评论ID查询回复 -->
+    <select id="selectRepliesByParentId" resultMap="CommentDetailResultMap">
+        SELECT 
+        <include refid="Detail_Column_List"/>,
+        0 AS reply_count,
+        (
+            SELECT COUNT(1) > 0
+            FROM ql_comment_like cl
+            WHERE cl.comment_id = c.id AND cl.user_id = #{currentUserId}
+        ) AS is_liked
+        FROM ql_music_comment c
+        INNER JOIN ql_user u ON c.user_id = u.id
+        WHERE c.parent_id = #{parentId}
+          AND c.status = 1
+          AND u.is_deleted = 0
+        ORDER BY c.create_time ASC
+    </select>
+
+    <!-- 增加评论点赞数 -->
+    <update id="incrementLikeCount">
+        UPDATE ql_music_comment
+        SET like_count = like_count + 1, update_time = NOW()
+        WHERE id = #{commentId} AND status = 1
+    </update>
+
+    <!-- 减少评论点赞数 -->
+    <update id="decrementLikeCount">
+        UPDATE ql_music_comment
+        SET like_count = GREATEST(like_count - 1, 0), update_time = NOW()
+        WHERE id = #{commentId} AND status = 1
+    </update>
+
+    <!-- 获取评论总数 -->
+    <select id="countByMusicId" resultType="java.lang.Long">
+        SELECT COUNT(1)
+        FROM ql_music_comment
+        WHERE music_id = #{musicId} AND status = 1
+    </select>
+
+    <!-- 获取最新评论 -->
+    <select id="selectLatestComments" resultMap="CommentDetailResultMap">
+        SELECT 
+        <include refid="Detail_Column_List"/>,
+        (
+            SELECT COUNT(1) 
+            FROM ql_music_comment r 
+            WHERE r.parent_id = c.id AND r.status = 1
+        ) AS reply_count,
+        FALSE AS is_liked
+        FROM ql_music_comment c
+        INNER JOIN ql_user u ON c.user_id = u.id
+        WHERE c.status = 1
+          AND c.parent_id IS NULL
+          AND u.is_deleted = 0
+        ORDER BY c.create_time DESC
+        LIMIT #{limit}
+    </select>
+
+    <!-- 获取热门评论 -->
+    <select id="selectHotComments" resultMap="CommentDetailResultMap">
+        SELECT 
+        <include refid="Detail_Column_List"/>,
+        (
+            SELECT COUNT(1) 
+            FROM ql_music_comment r 
+            WHERE r.parent_id = c.id AND r.status = 1
+        ) AS reply_count,
+        (
+            SELECT COUNT(1) > 0
+            FROM ql_comment_like cl
+            WHERE cl.comment_id = c.id AND cl.user_id = #{currentUserId}
+        ) AS is_liked
+        FROM ql_music_comment c
+        INNER JOIN ql_user u ON c.user_id = u.id
+        WHERE c.music_id = #{musicId}
+          AND c.status = 1
+          AND c.parent_id IS NULL
+          AND u.is_deleted = 0
+        ORDER BY c.like_count DESC, c.create_time DESC
+    </select>
+
+    <!-- 检查用户是否已评论 -->
+    <select id="existsByUserIdAndMusicId" resultType="java.lang.Boolean">
+        SELECT COUNT(1) > 0
+        FROM ql_music_comment
+        WHERE user_id = #{userId} 
+          AND music_id = #{musicId} 
+          AND status = 1
+    </select>
+
+    <!-- 软删除评论 -->
+    <update id="softDeleteById">
+        UPDATE ql_music_comment
+        SET status = 0, update_time = NOW()
+        WHERE id = #{commentId}
+    </update>
+
+    <!-- 批量软删除评论 -->
+    <update id="batchSoftDelete">
+        UPDATE ql_music_comment
+        SET status = 0, update_time = NOW()
+        WHERE id IN
+        <foreach collection="commentIds" item="commentId" open="(" separator="," close=")">
+            #{commentId}
+        </foreach>
+    </update>
+
+    <!-- 根据音乐ID和用户ID分页查询评论（包含用户点赞状态） -->
+    <select id="getCommentsByMusicIdWithUserLike" resultMap="CommentDetailResultMap">
+        SELECT 
+        <include refid="Detail_Column_List"/>,
+        (
+            SELECT COUNT(1) 
+            FROM ql_music_comment r 
+            WHERE r.parent_id = c.id AND r.status = 1
+        ) AS reply_count,
+        (
+            SELECT COUNT(1) > 0
+            FROM ql_comment_like cl
+            WHERE cl.comment_id = c.id AND cl.user_id = #{userId}
+        ) AS is_liked
+        FROM ql_music_comment c
+        INNER JOIN ql_user u ON c.user_id = u.id
+        WHERE c.music_id = #{musicId}
+          AND c.status = 1
+          AND c.parent_id IS NULL
+          AND u.is_deleted = 0
+        ORDER BY c.create_time DESC
+    </select>
+
+</mapper>

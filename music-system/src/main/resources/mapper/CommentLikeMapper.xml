@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.nyx.musicPlatform.mapper.CommentLikeMapper">
+
+    <!-- 结果映射 -->
+    <resultMap id="BaseResultMap" type="com.nyx.musicPlatform.entity.CommentLike">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="user_id" property="userId" jdbcType="BIGINT"/>
+        <result column="comment_id" property="commentId" jdbcType="BIGINT"/>
+        <result column="create_time" property="createTime" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <!-- 基础字段 -->
+    <sql id="Base_Column_List">
+        id, user_id, comment_id, create_time
+    </sql>
+
+    <!-- 检查用户是否已点赞评论 -->
+    <select id="existsByUserIdAndCommentId" resultType="java.lang.Boolean">
+        SELECT COUNT(1) > 0
+        FROM ql_comment_like
+        WHERE user_id = #{userId} AND comment_id = #{commentId}
+    </select>
+
+    <!-- 删除用户对评论的点赞 -->
+    <delete id="deleteByUserIdAndCommentId">
+        DELETE FROM ql_comment_like
+        WHERE user_id = #{userId} AND comment_id = #{commentId}
+    </delete>
+
+    <!-- 获取评论的点赞数 -->
+    <select id="countByCommentId" resultType="java.lang.Long">
+        SELECT COUNT(1)
+        FROM ql_comment_like
+        WHERE comment_id = #{commentId}
+    </select>
+
+</mapper>

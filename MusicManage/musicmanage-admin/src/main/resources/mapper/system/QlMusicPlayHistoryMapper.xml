@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.musicmanager.system.mapper.QlMusicPlayHistoryMapper">
+    
+    <resultMap type="QlMusicPlayHistory" id="QlMusicPlayHistoryResult">
+        <result property="id"    column="id"    />
+        <result property="userId"    column="user_id"    />
+        <result property="musicId"    column="music_id"    />
+        <result property="playTime"    column="play_time"    />
+        <result property="playDuration"    column="play_duration"    />
+        <result property="playPosition"    column="play_position"    />
+    </resultMap>
+
+    <sql id="selectQlMusicPlayHistoryVo">
+        select id, user_id, music_id, play_time, play_duration, play_position from ql_music_play_history
+    </sql>
+
+    <select id="selectQlMusicPlayHistoryList" parameterType="QlMusicPlayHistory" resultMap="QlMusicPlayHistoryResult">
+        <include refid="selectQlMusicPlayHistoryVo"/>
+        <where>  
+            <if test="userId != null "> and user_id = #{userId}</if>
+            <if test="musicId != null "> and music_id = #{musicId}</if>
+            <if test="playTime != null "> and play_time = #{playTime}</if>
+            <if test="playDuration != null "> and play_duration = #{playDuration}</if>
+            <if test="playPosition != null "> and play_position = #{playPosition}</if>
+        </where>
+    </select>
+    
+    <select id="selectQlMusicPlayHistoryById" parameterType="Long" resultMap="QlMusicPlayHistoryResult">
+        <include refid="selectQlMusicPlayHistoryVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertQlMusicPlayHistory" parameterType="QlMusicPlayHistory" useGeneratedKeys="true" keyProperty="id">
+        insert into ql_music_play_history
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="userId != null">user_id,</if>
+            <if test="musicId != null">music_id,</if>
+            <if test="playTime != null">play_time,</if>
+            <if test="playDuration != null">play_duration,</if>
+            <if test="playPosition != null">play_position,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="userId != null">#{userId},</if>
+            <if test="musicId != null">#{musicId},</if>
+            <if test="playTime != null">#{playTime},</if>
+            <if test="playDuration != null">#{playDuration},</if>
+            <if test="playPosition != null">#{playPosition},</if>
+         </trim>
+    </insert>
+
+    <update id="updateQlMusicPlayHistory" parameterType="QlMusicPlayHistory">
+        update ql_music_play_history
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="userId != null">user_id = #{userId},</if>
+            <if test="musicId != null">music_id = #{musicId},</if>
+            <if test="playTime != null">play_time = #{playTime},</if>
+            <if test="playDuration != null">play_duration = #{playDuration},</if>
+            <if test="playPosition != null">play_position = #{playPosition},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteQlMusicPlayHistoryById" parameterType="Long">
+        delete from ql_music_play_history where id = #{id}
+    </delete>
+
+    <delete id="deleteQlMusicPlayHistoryByIds" parameterType="String">
+        delete from ql_music_play_history where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

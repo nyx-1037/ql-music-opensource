@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.nyx.musicPlatform.mapper.MusicCategoryMapper">
+
+    <!-- 结果映射 -->
+    <resultMap id="BaseResultMap" type="com.nyx.musicPlatform.entity.MusicCategory">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="name" property="name" jdbcType="VARCHAR"/>
+        <result column="description" property="description" jdbcType="VARCHAR"/>
+        <result column="sort_order" property="sortOrder" jdbcType="INTEGER"/>
+        <result column="status" property="status" jdbcType="TINYINT"/>
+        <result column="create_time" property="createTime" jdbcType="TIMESTAMP"/>
+        <result column="update_time" property="updateTime" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <!-- 基础字段 -->
+    <sql id="Base_Column_List">
+        id, name, description, sort_order, status, create_time, update_time
+    </sql>
+
+    <!-- 获取启用状态的分类列表 -->
+    <select id="getEnabledCategories" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM ql_music_category
+        WHERE status = 1
+        ORDER BY sort_order ASC, id ASC
+    </select>
+
+    <!-- 根据音乐ID获取分类列表 -->
+    <select id="getCategoriesByMusicId" resultMap="BaseResultMap">
+        SELECT mc.<include refid="Base_Column_List"/>
+        FROM ql_music_category mc
+        INNER JOIN ql_music_category_relation mcr ON mc.id = mcr.category_id
+        WHERE mcr.music_id = #{musicId}
+        AND mc.status = 1
+        ORDER BY mc.sort_order ASC, mc.id ASC
+    </select>
+
+    <!-- 根据ID查询分类 -->
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM ql_music_category
+        WHERE id = #{id}
+    </select>
+
+    <!-- 根据名称查询分类 -->
+    <select id="selectByName" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM ql_music_category
+        WHERE name = #{name}
+    </select>
+
+    <!-- 插入分类 -->
+    <insert id="insert" parameterType="com.nyx.musicPlatform.entity.MusicCategory" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO ql_music_category (name, description, sort_order, status, create_time, update_time)
+        VALUES (#{name}, #{description}, #{sortOrder}, #{status}, #{createTime}, #{updateTime})
+    </insert>
+
+    <!-- 更新分类 -->
+    <update id="updateById" parameterType="com.nyx.musicPlatform.entity.MusicCategory">
+        UPDATE ql_music_category
+        SET name = #{name},
+            description = #{description},
+            sort_order = #{sortOrder},
+            status = #{status},
+            update_time = #{updateTime}
+        WHERE id = #{id}
+    </update>
+
+    <!-- 删除分类 -->
+    <delete id="deleteById">
+        DELETE FROM ql_music_category
+        WHERE id = #{id}
+    </delete>
+
+    <!-- 获取所有分类（包括禁用的） -->
+    <select id="selectAll" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM ql_music_category
+        ORDER BY sort_order ASC, id ASC
+    </select>
+
+    <!-- 更新分类状态 -->
+    <update id="updateStatus">
+        UPDATE ql_music_category
+        SET status = #{status},
+            update_time = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <!-- 获取分类数量 -->
+    <select id="countAll" resultType="java.lang.Long">
+        SELECT COUNT(1)
+        FROM ql_music_category
+    </select>
+
+    <!-- 获取启用分类数量 -->
+    <select id="countEnabled" resultType="java.lang.Long">
+        SELECT COUNT(1)
+        FROM ql_music_category
+        WHERE status = 1
+    </select>
+
+    <!-- 检查分类名称是否存在 -->
+    <select id="existsByName" resultType="java.lang.Boolean">
+        SELECT COUNT(1) > 0
+        FROM ql_music_category
+        WHERE name = #{name}
+        <if test="excludeId != null">
+            AND id != #{excludeId}
+        </if>
+    </select>
+
+</mapper>

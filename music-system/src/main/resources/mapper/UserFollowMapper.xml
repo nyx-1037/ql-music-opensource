@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.nyx.musicPlatform.mapper.UserFollowMapper">
+
+    <!-- 结果映射 -->
+    <resultMap id="UserFollowResultMap" type="com.nyx.musicPlatform.entity.UserFollow">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="follower_id" property="followerId" jdbcType="BIGINT"/>
+        <result column="following_id" property="followingId" jdbcType="BIGINT"/>
+        <result column="created_at" property="createdAt" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <!-- 关注用户 -->
+    <insert id="followUser">
+        INSERT INTO ql_user_follow (follower_id, following_id, created_at)
+        VALUES (#{followerId}, #{followingId}, NOW())
+    </insert>
+
+    <!-- 取消关注用户 -->
+    <delete id="unfollowUser">
+        DELETE FROM ql_user_follow
+        WHERE follower_id = #{followerId} AND following_id = #{followingId}
+    </delete>
+
+    <!-- 检查是否关注 -->
+    <select id="isFollowing" resultType="boolean">
+        SELECT COUNT(*) > 0
+        FROM ql_user_follow
+        WHERE follower_id = #{followerId} AND following_id = #{followingId}
+    </select>
+
+    <!-- 获取关注列表 -->
+    <select id="getFollowingList" resultType="com.nyx.musicPlatform.vo.UserDetailVO">
+        SELECT u.id, u.username, u.nickname, u.avatar_url as avatar,
+               u.status, u.create_time as createTime
+        FROM ql_user_follow uf
+        JOIN ql_user u ON uf.following_id = u.id
+        WHERE uf.follower_id = #{userId}
+        AND u.is_deleted = 0
+        ORDER BY uf.created_at DESC
+    </select>
+
+    <!-- 获取粉丝列表 -->
+    <select id="getFollowersList" resultType="com.nyx.musicPlatform.vo.UserDetailVO">
+        SELECT u.id, u.username, u.nickname, u.avatar_url as avatar,
+               u.status, u.create_time as createTime
+        FROM ql_user_follow uf
+        JOIN ql_user u ON uf.follower_id = u.id
+        WHERE uf.following_id = #{userId}
+        AND u.is_deleted = 0
+        ORDER BY uf.created_at DESC
+    </select>
+
+
+
+</mapper>

@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.nyx.musicPlatform.mapper.MusicCategoryRelationMapper">
+
+    <!-- 结果映射 -->
+    <resultMap id="BaseResultMap" type="com.nyx.musicPlatform.entity.MusicCategoryRelation">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="music_id" property="musicId" jdbcType="BIGINT"/>
+        <result column="category_id" property="categoryId" jdbcType="BIGINT"/>
+        <result column="create_time" property="createTime" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <!-- 基础字段 -->
+    <sql id="Base_Column_List">
+        id, music_id, category_id, create_time
+    </sql>
+
+    <!-- 根据音乐ID删除关系 -->
+    <delete id="deleteByMusicId">
+        DELETE FROM ql_music_category_relation
+        WHERE music_id = #{musicId}
+    </delete>
+
+    <!-- 根据分类ID获取音乐ID列表 -->
+    <select id="getMusicIdsByCategoryId" resultType="java.lang.Long">
+        SELECT music_id
+        FROM ql_music_category_relation
+        WHERE category_id = #{categoryId}
+        ORDER BY create_time DESC
+    </select>
+
+    <!-- 批量插入关系 -->
+    <insert id="batchInsert" parameterType="java.util.List">
+        INSERT INTO ql_music_category_relation (music_id, category_id, create_time)
+        VALUES
+        <foreach collection="list" item="item" separator=",">
+            (#{item.musicId}, #{item.categoryId}, #{item.createTime})
+        </foreach>
+    </insert>
+
+    <!-- 插入单个关系 -->
+    <insert id="insert" parameterType="com.nyx.musicPlatform.entity.MusicCategoryRelation">
+        INSERT INTO ql_music_category_relation (music_id, category_id, create_time)
+        VALUES (#{musicId}, #{categoryId}, #{createTime})
+    </insert>
+
+    <!-- 根据音乐ID和分类ID删除关系 -->
+    <delete id="deleteByMusicIdAndCategoryId">
+        DELETE FROM ql_music_category_relation
+        WHERE music_id = #{musicId} AND category_id = #{categoryId}
+    </delete>
+
+    <!-- 根据分类ID删除关系 -->
+    <delete id="deleteByCategoryId">
+        DELETE FROM ql_music_category_relation
+        WHERE category_id = #{categoryId}
+    </delete>
+
+    <!-- 检查关系是否存在 -->
+    <select id="existsByMusicIdAndCategoryId" resultType="java.lang.Boolean">
+        SELECT COUNT(1) > 0
+        FROM ql_music_category_relation
+        WHERE music_id = #{musicId} AND category_id = #{categoryId}
+    </select>
+
+    <!-- 根据音乐ID获取分类ID列表 -->
+    <select id="getCategoryIdsByMusicId" resultType="java.lang.Long">
+        SELECT category_id
+        FROM ql_music_category_relation
+        WHERE music_id = #{musicId}
+        ORDER BY create_time ASC
+    </select>
+
+    <!-- 获取分类下的音乐数量 -->
+    <select id="countMusicByCategoryId" resultType="java.lang.Long">
+        SELECT COUNT(1)
+        FROM ql_music_category_relation
+        WHERE category_id = #{categoryId}
+    </select>
+
+    <!-- 获取音乐的分类数量 -->
+    <select id="countCategoryByMusicId" resultType="java.lang.Long">
+        SELECT COUNT(1)
+        FROM ql_music_category_relation
+        WHERE music_id = #{musicId}
+    </select>
+
+    <!-- 根据音乐ID列表批量删除关系 -->
+    <delete id="deleteByMusicIds">
+        DELETE FROM ql_music_category_relation
+        WHERE music_id IN
+        <foreach collection="musicIds" item="musicId" open="(" separator="," close=")">
+            #{musicId}
+        </foreach>
+    </delete>
+
+    <!-- 根据分类ID列表批量删除关系 -->
+    <delete id="deleteByCategoryIds">
+        DELETE FROM ql_music_category_relation
+        WHERE category_id IN
+        <foreach collection="categoryIds" item="categoryId" open="(" separator="," close=")">
+            #{categoryId}
+        </foreach>
+    </delete>
+
+    <!-- 获取所有关系 -->
+    <select id="selectAll" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM ql_music_category_relation
+        ORDER BY create_time DESC
+    </select>
+
+</mapper>

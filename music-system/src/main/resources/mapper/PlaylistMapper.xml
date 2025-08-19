@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.nyx.musicPlatform.mapper.PlaylistMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.nyx.musicPlatform.entity.Playlist">
+        <id column="id" property="id" />
+        <result column="name" property="name" />
+        <result column="description" property="description" />
+        <result column="cover_url" property="coverUrl" />
+        <result column="user_id" property="userId" />
+        <result column="is_public" property="isPublic" />
+        <result column="play_count" property="playCount" />
+        <result column="music_count" property="musicCount" />
+        <result column="status" property="status" />
+        <result column="create_time" property="createTime" />
+        <result column="update_time" property="updateTime" />
+        <result column="is_deleted" property="isDeleted" />
+    </resultMap>
+
+    <!-- 歌单VO映射结果 -->
+    <resultMap id="PlaylistVOResultMap" type="com.nyx.musicPlatform.vo.PlaylistVO">
+        <id column="id" property="id" />
+        <result column="name" property="name" />
+        <result column="description" property="description" />
+        <result column="cover_url" property="coverUrl" />
+        <result column="user_id" property="userId" />
+        <result column="username" property="username" />
+        <result column="nickname" property="nickname" />
+        <result column="is_public" property="isPublic" />
+        <result column="play_count" property="playCount" />
+        <result column="music_count" property="musicCount" />
+        <result column="create_time" property="createTime" />
+        <result column="update_time" property="updateTime" />
+        <result column="is_owner" property="isOwner" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, name, description, cover_url, user_id, is_public, play_count, music_count, status, create_time, update_time, is_deleted
+    </sql>
+
+    <!-- 分页查询歌单详情 -->
+    <select id="selectPlaylistPage" resultMap="PlaylistVOResultMap">
+        SELECT 
+            p.id,
+            p.name,
+            p.description,
+            p.cover_url,
+            p.user_id,
+            u.username,
+            u.nickname,
+            p.is_public,
+            p.play_count,
+            p.music_count,
+            p.create_time,
+            p.update_time,
+            CASE WHEN p.user_id = #{currentUserId} THEN 1 ELSE 0 END as is_owner
+        FROM ql_playlist p
+        INNER JOIN ql_user u ON p.user_id = u.id
+        WHERE p.is_deleted = 0 
+          AND u.is_deleted = 0
+          AND p.status = 1
+        <if test="userId != null">
+            AND p.user_id = #{userId}
+        </if>
+        <if test="isPublic != null">
+            AND p.is_public = #{isPublic}
+        </if>
+        <if test="keyword != null and keyword != ''">
+            AND p.name LIKE CONCAT('%', #{keyword}, '%')
+        </if>
+        <if test="currentUserId == null or (userId != null and userId != currentUserId)">
+            AND p.is_public = 1
+        </if>
+        ORDER BY p.create_time DESC
+    </select>
+
+    <!-- 根据ID查询歌单详情 -->
+    <select id="selectPlaylistById" resultMap="PlaylistVOResultMap">
+        SELECT 
+            p.id,
+            p.name,
+            p.description,
+            p.cover_url,
+            p.user_id,
+            u.username,
+            u.nickname,
+            p.is_public,
+            p.play_count,
+            p.music_count,
+            p.create_time,
+            p.update_time,
+            CASE WHEN p.user_id = #{currentUserId} THEN 1 ELSE 0 END as is_owner
+        FROM ql_playlist p
+        INNER JOIN ql_user u ON p.user_id = u.id
+        WHERE p.id = #{id}
+          AND p.is_deleted = 0 
+          AND u.is_deleted = 0
+          AND p.status = 1
+        <if test="currentUserId == null">
+            AND p.is_public = 1
+        </if>
+        <if test="currentUserId != null">
+            AND (p.is_public = 1 OR p.user_id = #{currentUserId})
+        </if>
+    </select>
+
+    <!-- 查询用户的歌单列表 -->
+    <select id="selectUserPlaylists" resultMap="PlaylistVOResultMap">
+        SELECT 
+            p.id,
+            p.name,
+            p.description,
+            p.cover_url,
+            p.user_id,
+            u.username,
+            u.nickname,
+            p.is_public,
+            p.play_count,
+            p.music_count,
+            p.create_time,
+            p.update_time,
+            CASE WHEN p.user_id = #{currentUserId} THEN 1 ELSE 0 END as is_owner
+        FROM ql_playlist p
+        INNER JOIN ql_user u ON p.user_id = u.id
+        WHERE p.user_id = #{userId}
+          AND p.is_deleted = 0 
+          AND u.is_deleted = 0
+          AND p.status = 1
+        <if test="currentUserId == null or currentUserId != userId">
+            AND p.is_public = 1
+        </if>
+        ORDER BY p.create_time DESC
+    </select>
+
+    <!-- 更新歌单的音乐数量 -->
+    <update id="updateMusicCount">
+        UPDATE ql_playlist 
+        SET music_count = (
+            SELECT COUNT(*) 
+            FROM ql_playlist_music pm
+            INNER JOIN ql_music m ON pm.music_id = m.id
+            WHERE pm.playlist_id = #{playlistId}
+              AND m.is_deleted = 0
+              AND m.status = 1
+        ),
+        update_time = NOW()
+        WHERE id = #{playlistId}
+    </update>
+
+    <!-- 增加歌单播放次数 -->
+    <update id="incrementPlayCount">
+        UPDATE ql_playlist 
+        SET play_count = play_count + 1,
+            update_time = NOW()
+        WHERE id = #{playlistId}
+          AND is_deleted = 0
+          AND status = 1
+    </update>
+
+</mapper>

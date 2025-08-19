@@ -1,0 +1,257 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.nyx.musicPlatform.mapper.UserMapper">
+
+    <!-- 结果映射 -->
+    <resultMap id="BaseResultMap" type="com.nyx.musicPlatform.entity.User">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="username" property="username" jdbcType="VARCHAR"/>
+        <result column="password" property="password" jdbcType="VARCHAR"/>
+        <result column="email" property="email" jdbcType="VARCHAR"/>
+        <result column="nickname" property="nickname" jdbcType="VARCHAR"/>
+        <result column="avatar_url" property="avatarUrl" jdbcType="VARCHAR"/>
+        <result column="status" property="status" jdbcType="TINYINT"/>
+        <result column="create_time" property="createTime" jdbcType="TIMESTAMP"/>
+        <result column="update_time" property="updateTime" jdbcType="TIMESTAMP"/>
+        <result column="is_deleted" property="isDeleted" jdbcType="TINYINT"/>
+    </resultMap>
+
+    <!-- 基础字段 -->
+    <sql id="Base_Column_List">
+        id, username, password, email, nickname, avatar_url, status, 
+        create_time, update_time, is_deleted
+    </sql>
+
+    <!-- 查询条件 -->
+    <sql id="Base_Where_Clause">
+        <where>
+            <if test="id != null">
+                AND id = #{id}
+            </if>
+            <if test="username != null and username != ''">
+                AND username = #{username}
+            </if>
+            <if test="email != null and email != ''">
+                AND email = #{email}
+            </if>
+            <if test="status != null">
+                AND status = #{status}
+            </if>
+            <if test="isDeleted != null">
+                AND is_deleted = #{isDeleted}
+            </if>
+        </where>
+    </sql>
+
+    <!-- 根据用户名查询用户 -->
+    <select id="findByUsername" parameterType="java.lang.String" resultMap="BaseResultMap">
+        SELECT 
+        <include refid="Base_Column_List"/>
+        FROM `ql_user`
+        WHERE username = #{username} AND is_deleted = 0
+    </select>
+
+    <!-- 根据邮箱查询用户 -->
+    <select id="findByEmail" parameterType="java.lang.String" resultMap="BaseResultMap">
+        SELECT 
+        <include refid="Base_Column_List"/>
+        FROM `ql_user`
+        WHERE email = #{email} AND is_deleted = 0
+    </select>
+
+    <!-- 检查用户名是否存在 -->
+    <select id="existsByUsername" parameterType="java.lang.String" resultType="java.lang.Boolean">
+        SELECT COUNT(1) > 0
+        FROM `ql_user`
+        WHERE username = #{username} AND is_deleted = 0
+    </select>
+
+    <!-- 检查邮箱是否存在 -->
+    <select id="existsByEmail" parameterType="java.lang.String" resultType="java.lang.Boolean">
+        SELECT COUNT(1) > 0
+        FROM `ql_user`
+        WHERE email = #{email} AND is_deleted = 0
+    </select>
+
+    <!-- 检查用户名或邮箱是否存在（排除指定用户ID） -->
+    <select id="existsByUsernameOrEmailExcludeId" resultType="java.lang.Boolean">
+        SELECT COUNT(1) > 0
+        FROM `ql_user`
+        WHERE (username = #{username} OR email = #{email})
+          AND id != #{excludeId}
+          AND is_deleted = 0
+    </select>
+
+    <!-- 根据用户ID查询用户状态 -->
+    <select id="getUserStatusById" parameterType="java.lang.Long" resultType="java.lang.Integer">
+        SELECT status
+        FROM `ql_user`
+        WHERE id = #{userId} AND is_deleted = 0
+    </select>
+
+    <!-- 分页查询用户列表 -->
+    <select id="selectUserPage" resultMap="BaseResultMap">
+        SELECT 
+        <include refid="Base_Column_List"/>
+        FROM `ql_user`
+        <where>
+            is_deleted = 0
+            <if test="username != null and username != ''">
+                AND username LIKE CONCAT('%', #{username}, '%')
+            </if>
+            <if test="email != null and email != ''">
+                AND email LIKE CONCAT('%', #{email}, '%')
+            </if>
+            <if test="nickname != null and nickname != ''">
+                AND nickname LIKE CONCAT('%', #{nickname}, '%')
+            </if>
+            <if test="status != null">
+                AND status = #{status}
+            </if>
+        </where>
+        ORDER BY create_time DESC
+    </select>
+
+    <!-- 搜索用户 -->
+    <select id="searchUsers" resultMap="BaseResultMap">
+        SELECT 
+        <include refid="Base_Column_List"/>
+        FROM `ql_user`
+        <where>
+            is_deleted = 0
+            <if test="keyword != null and keyword != ''">
+                AND (
+                    username LIKE CONCAT('%', #{keyword}, '%')
+                    OR email LIKE CONCAT('%', #{keyword}, '%')
+                    OR nickname LIKE CONCAT('%', #{keyword}, '%')
+                )
+            </if>
+        </where>
+        ORDER BY 
+        <choose>
+            <when test="orderBy != null and orderBy != ''">
+                ${orderBy}
+            </when>
+            <otherwise>
+                create_time DESC
+            </otherwise>
+        </choose>
+    </select>
+
+    <!-- 获取用户统计信息 -->
+    <select id="getUserStatistics" resultType="java.util.Map">
+        SELECT 
+            COUNT(1) AS totalUsers,
+            SUM(CASE WHEN status = 1 THEN 1 ELSE 0 END) AS activeUsers,
+            SUM(CASE WHEN status = 0 THEN 1 ELSE 0 END) AS inactiveUsers,
+            SUM(CASE WHEN DATE(create_time) = CURDATE() THEN 1 ELSE 0 END) AS todayNewUsers
+        FROM `ql_user`
+        WHERE is_deleted = 0
+    </select>
+
+    <!-- 批量更新用户状态 -->
+    <update id="batchUpdateStatus">
+        UPDATE `ql_user`
+        SET status = #{status}, update_time = NOW()
+        WHERE id IN
+        <foreach collection="userIds" item="userId" open="(" separator="," close=")">
+            #{userId}
+        </foreach>
+        AND is_deleted = 0
+    </update>
+
+    <!-- 批量逻辑删除用户 -->
+    <update id="batchLogicDelete">
+        UPDATE `ql_user`
+        SET is_deleted = 1, update_time = NOW()
+        WHERE id IN
+        <foreach collection="userIds" item="userId" open="(" separator="," close=")">
+            #{userId}
+        </foreach>
+        AND is_deleted = 0
+    </update>
+
+    <!-- 重置用户密码 -->
+    <update id="resetPassword">
+        UPDATE `ql_user`
+        SET password = #{newPassword}, update_time = NOW()
+        WHERE id = #{userId} AND is_deleted = 0
+    </update>
+
+    <!-- 更新用户最后登录时间 -->
+    <update id="updateLastLoginTime">
+        UPDATE `ql_user`
+        SET update_time = NOW()
+        WHERE id = #{userId} AND is_deleted = 0
+    </update>
+
+    <!-- 根据用户名或邮箱查询用户 -->
+    <select id="findByUsernameOrEmail" parameterType="java.lang.String" resultMap="BaseResultMap">
+        SELECT 
+        <include refid="Base_Column_List"/>
+        FROM `ql_user`
+        WHERE (username = #{usernameOrEmail} OR email = #{usernameOrEmail})
+          AND is_deleted = 0
+    </select>
+
+    <!-- 获取用户音乐统计信息 -->
+    <select id="getUserMusicStatistics" parameterType="java.lang.Long" resultType="java.util.Map">
+        SELECT 
+            u.id AS userId,
+            u.username,
+            u.nickname,
+            COALESCE(COUNT(m.id), 0) AS musicCount,
+            COALESCE(SUM(m.play_count), 0) AS totalPlayCount,
+            COALESCE(SUM(m.file_size), 0) AS totalFileSize
+        FROM `ql_user` u
+        LEFT JOIN `ql_music` m ON u.id = m.upload_user_id AND m.is_deleted = 0
+        WHERE u.id = #{userId} AND u.is_deleted = 0
+        GROUP BY u.id, u.username, u.nickname
+    </select>
+
+    <!-- 获取活跃用户列表（按上传音乐数量排序） -->
+    <select id="getActiveUsersByMusicCount" resultType="java.util.Map">
+        SELECT 
+            u.id,
+            u.username,
+            u.nickname,
+            u.avatar_url,
+            COUNT(m.id) AS musicCount,
+            SUM(m.play_count) AS totalPlayCount
+        FROM `ql_user` u
+        LEFT JOIN `ql_music` m ON u.id = m.upload_user_id AND m.is_deleted = 0
+        WHERE u.status = 1 AND u.is_deleted = 0
+        GROUP BY u.id, u.username, u.nickname, u.avatar_url
+        HAVING musicCount > 0
+        ORDER BY musicCount DESC, totalPlayCount DESC
+        LIMIT #{limit}
+    </select>
+
+    <!-- 检查用户是否有权限访问音乐 -->
+    <select id="checkUserMusicPermission" resultType="java.lang.Boolean">
+        SELECT COUNT(1) > 0
+        FROM `ql_music` m
+        INNER JOIN `ql_user` u ON m.upload_user_id = u.id
+        WHERE m.id = #{musicId}
+          AND (m.upload_user_id = #{userId} OR u.id = #{userId})
+          AND m.is_deleted = 0
+          AND u.is_deleted = 0
+    </select>
+
+    <!-- 获取用户上传的音乐总大小 -->
+    <select id="getUserTotalMusicSize" parameterType="java.lang.Long" resultType="java.lang.Long">
+        SELECT COALESCE(SUM(file_size), 0)
+        FROM `ql_music`
+        WHERE upload_user_id = #{userId} AND is_deleted = 0
+    </select>
+
+    <!-- 获取用户今日上传的音乐数量 -->
+    <select id="getUserTodayMusicCount" parameterType="java.lang.Long" resultType="java.lang.Long">
+        SELECT COUNT(1)
+        FROM `ql_music`
+        WHERE upload_user_id = #{userId}
+          AND DATE(create_time) = CURDATE()
+          AND is_deleted = 0
+    </select>
+
+</mapper>

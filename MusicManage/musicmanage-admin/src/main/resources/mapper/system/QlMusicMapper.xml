@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.musicmanager.system.mapper.QlMusicMapper">
+    
+    <resultMap type="QlMusic" id="QlMusicResult">
+        <result property="id"    column="id"    />
+        <result property="title"    column="title"    />
+        <result property="artist"    column="artist"    />
+        <result property="album"    column="album"    />
+        <result property="duration"    column="duration"    />
+        <result property="filePath"    column="file_path"    />
+        <result property="fileName"    column="file_name"    />
+        <result property="originalFileName"    column="original_file_name"    />
+        <result property="fileSize"    column="file_size"    />
+        <result property="fileType"    column="file_type"    />
+        <result property="uploadUserId"    column="upload_user_id"    />
+        <result property="playCount"    column="play_count"    />
+        <result property="status"    column="status"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateTime"    column="update_time"    />
+        <result property="isDeleted"    column="is_deleted"    />
+        <result property="genre"    column="genre"    />
+        <result property="releaseYear"    column="release_year"    />
+        <result property="description"    column="description"    />
+        <result property="tags"    column="tags"    />
+        <result property="isPublic"    column="is_public"    />
+        <result property="allowDownload"    column="allow_download"    />
+        <result property="allowComment"    column="allow_comment"    />
+        <result property="coverUrl"    column="cover_url"    />
+    </resultMap>
+
+    <sql id="selectQlMusicVo">
+        select id, title, artist, album, duration, file_path, file_name, original_file_name, file_size, file_type, upload_user_id, play_count, status, create_time, update_time, is_deleted, genre, release_year, description, tags, is_public, allow_download, allow_comment, cover_url from ql_music
+    </sql>
+
+    <select id="selectQlMusicList" parameterType="QlMusic" resultMap="QlMusicResult">
+        <include refid="selectQlMusicVo"/>
+        <where>  
+            <if test="title != null  and title != ''"> and title = #{title}</if>
+            <if test="artist != null  and artist != ''"> and artist = #{artist}</if>
+            <if test="album != null  and album != ''"> and album = #{album}</if>
+            <if test="duration != null "> and duration = #{duration}</if>
+            <if test="filePath != null  and filePath != ''"> and file_path = #{filePath}</if>
+            <if test="fileName != null  and fileName != ''"> and file_name like concat('%', #{fileName}, '%')</if>
+            <if test="originalFileName != null  and originalFileName != ''"> and original_file_name like concat('%', #{originalFileName}, '%')</if>
+            <if test="fileSize != null "> and file_size = #{fileSize}</if>
+            <if test="fileType != null  and fileType != ''"> and file_type = #{fileType}</if>
+            <if test="uploadUserId != null "> and upload_user_id = #{uploadUserId}</if>
+            <if test="playCount != null "> and play_count = #{playCount}</if>
+            <if test="status != null "> and status = #{status}</if>
+            <if test="isDeleted != null "> and is_deleted = #{isDeleted}</if>
+            <if test="genre != null  and genre != ''"> and genre = #{genre}</if>
+            <if test="releaseYear != null "> and release_year = #{releaseYear}</if>
+            <if test="description != null  and description != ''"> and description = #{description}</if>
+            <if test="tags != null  and tags != ''"> and tags = #{tags}</if>
+            <if test="isPublic != null "> and is_public = #{isPublic}</if>
+            <if test="allowDownload != null "> and allow_download = #{allowDownload}</if>
+            <if test="allowComment != null "> and allow_comment = #{allowComment}</if>
+            <if test="coverUrl != null  and coverUrl != ''"> and cover_url = #{coverUrl}</if>
+        </where>
+    </select>
+    
+    <select id="selectQlMusicById" parameterType="Long" resultMap="QlMusicResult">
+        <include refid="selectQlMusicVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertQlMusic" parameterType="QlMusic" useGeneratedKeys="true" keyProperty="id">
+        insert into ql_music
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="title != null and title != ''">title,</if>
+            <if test="artist != null and artist != ''">artist,</if>
+            <if test="album != null">album,</if>
+            <if test="duration != null">duration,</if>
+            <if test="filePath != null and filePath != ''">file_path,</if>
+            <if test="fileName != null and fileName != ''">file_name,</if>
+            <if test="originalFileName != null and originalFileName != ''">original_file_name,</if>
+            <if test="fileSize != null">file_size,</if>
+            <if test="fileType != null and fileType != ''">file_type,</if>
+            <if test="uploadUserId != null">upload_user_id,</if>
+            <if test="playCount != null">play_count,</if>
+            <if test="status != null">status,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateTime != null">update_time,</if>
+            <if test="isDeleted != null">is_deleted,</if>
+            <if test="genre != null">genre,</if>
+            <if test="releaseYear != null">release_year,</if>
+            <if test="description != null">description,</if>
+            <if test="tags != null">tags,</if>
+            <if test="isPublic != null">is_public,</if>
+            <if test="allowDownload != null">allow_download,</if>
+            <if test="allowComment != null">allow_comment,</if>
+            <if test="coverUrl != null">cover_url,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="title != null and title != ''">#{title},</if>
+            <if test="artist != null and artist != ''">#{artist},</if>
+            <if test="album != null">#{album},</if>
+            <if test="duration != null">#{duration},</if>
+            <if test="filePath != null and filePath != ''">#{filePath},</if>
+            <if test="fileName != null and fileName != ''">#{fileName},</if>
+            <if test="originalFileName != null and originalFileName != ''">#{originalFileName},</if>
+            <if test="fileSize != null">#{fileSize},</if>
+            <if test="fileType != null and fileType != ''">#{fileType},</if>
+            <if test="uploadUserId != null">#{uploadUserId},</if>
+            <if test="playCount != null">#{playCount},</if>
+            <if test="status != null">#{status},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+            <if test="isDeleted != null">#{isDeleted},</if>
+            <if test="genre != null">#{genre},</if>
+            <if test="releaseYear != null">#{releaseYear},</if>
+            <if test="description != null">#{description},</if>
+            <if test="tags != null">#{tags},</if>
+            <if test="isPublic != null">#{isPublic},</if>
+            <if test="allowDownload != null">#{allowDownload},</if>
+            <if test="allowComment != null">#{allowComment},</if>
+            <if test="coverUrl != null">#{coverUrl},</if>
+         </trim>
+    </insert>
+
+    <update id="updateQlMusic" parameterType="QlMusic">
+        update ql_music
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="title != null and title != ''">title = #{title},</if>
+            <if test="artist != null and artist != ''">artist = #{artist},</if>
+            <if test="album != null">album = #{album},</if>
+            <if test="duration != null">duration = #{duration},</if>
+            <if test="filePath != null and filePath != ''">file_path = #{filePath},</if>
+            <if test="fileName != null and fileName != ''">file_name = #{fileName},</if>
+            <if test="originalFileName != null and originalFileName != ''">original_file_name = #{originalFileName},</if>
+            <if test="fileSize != null">file_size = #{fileSize},</if>
+            <if test="fileType != null and fileType != ''">file_type = #{fileType},</if>
+            <if test="uploadUserId != null">upload_user_id = #{uploadUserId},</if>
+            <if test="playCount != null">play_count = #{playCount},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="isDeleted != null">is_deleted = #{isDeleted},</if>
+            <if test="genre != null">genre = #{genre},</if>
+            <if test="releaseYear != null">release_year = #{releaseYear},</if>
+            <if test="description != null">description = #{description},</if>
+            <if test="tags != null">tags = #{tags},</if>
+            <if test="isPublic != null">is_public = #{isPublic},</if>
+            <if test="allowDownload != null">allow_download = #{allowDownload},</if>
+            <if test="allowComment != null">allow_comment = #{allowComment},</if>
+            <if test="coverUrl != null">cover_url = #{coverUrl},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteQlMusicById" parameterType="Long">
+        delete from ql_music where id = #{id}
+    </delete>
+
+    <delete id="deleteQlMusicByIds" parameterType="String">
+        delete from ql_music where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

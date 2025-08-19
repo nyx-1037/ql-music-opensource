@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.nyx.musicPlatform.mapper.PlaylistMusicMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.nyx.musicPlatform.entity.PlaylistMusic">
+        <id column="id" property="id" />
+        <result column="playlist_id" property="playlistId" />
+        <result column="music_id" property="musicId" />
+        <result column="sort_order" property="sortOrder" />
+        <result column="create_time" property="createTime" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, playlist_id, music_id, sort_order, create_time
+    </sql>
+
+    <!-- 查询歌单中的音乐列表 -->
+    <select id="selectMusicsByPlaylistId" resultType="com.nyx.musicPlatform.vo.MusicVO">
+        SELECT 
+            m.id,
+            m.title,
+            m.artist,
+            m.album,
+            m.duration,
+            m.file_path as filePath,
+            m.file_name as fileName,
+            m.original_file_name as originalName,
+            m.file_size as fileSize,
+            m.cover_url as coverImagePath,
+            m.file_type as fileType,
+            m.upload_user_id as userId,
+            m.play_count as playCount,
+            m.status,
+            m.create_time as createTime,
+            m.update_time as updateTime,
+            m.genre,
+            m.release_year as releaseYear,
+            m.description,
+            m.tags,
+            m.is_public as isPublic,
+            m.allow_download as allowDownload,
+            m.allow_comment as allowComment,
+            CASE 
+                WHEN m.cover_url IS NOT NULL AND m.cover_url != '' 
+                THEN m.cover_url 
+                ELSE NULL 
+            END as coverUrl,
+            CASE 
+                WHEN m.file_path IS NOT NULL AND m.file_path != '' 
+                THEN m.file_path 
+                ELSE NULL 
+            END as url,
+            u.username as uploadUsername,
+            u.nickname as uploadNickname,
+            pm.sort_order as sortOrder
+        FROM ql_playlist_music pm
+        INNER JOIN ql_music m ON pm.music_id = m.id
+        INNER JOIN ql_user u ON m.upload_user_id = u.id
+        WHERE pm.playlist_id = #{playlistId}
+          AND m.is_deleted = 0
+          AND m.status = 1
+          AND u.is_deleted = 0
+        ORDER BY pm.sort_order ASC, pm.create_time ASC
+    </select>
+
+    <!-- 检查音乐是否已在歌单中 -->
+    <select id="existsByPlaylistIdAndMusicId" resultType="boolean">
+        SELECT COUNT(*) > 0
+        FROM ql_playlist_music pm
+        INNER JOIN ql_music m ON pm.music_id = m.id
+        WHERE pm.playlist_id = #{playlistId}
+          AND pm.music_id = #{musicId}
+          AND m.is_deleted = 0
+          AND m.status = 1
+    </select>
+
+    <!-- 获取歌单中音乐的最大排序号 -->
+    <select id="getMaxSortOrder" resultType="java.lang.Integer">
+        SELECT COALESCE(MAX(sort_order), 0)
+        FROM ql_playlist_music
+        WHERE playlist_id = #{playlistId}
+    </select>
+
+    <!-- 删除歌单中的音乐 -->
+    <delete id="deleteByPlaylistIdAndMusicId">
+        DELETE FROM ql_playlist_music
+        WHERE playlist_id = #{playlistId}
+          AND music_id = #{musicId}
+    </delete>
+
+    <!-- 更新音乐在歌单中的排序 -->
+    <update id="updateSortOrder">
+        UPDATE ql_playlist_music
+        SET sort_order = #{sortOrder}
+        WHERE playlist_id = #{playlistId}
+          AND music_id = #{musicId}
+    </update>
+
+</mapper>

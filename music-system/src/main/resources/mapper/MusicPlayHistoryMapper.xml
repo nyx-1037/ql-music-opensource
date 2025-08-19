@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.nyx.musicPlatform.mapper.MusicPlayHistoryMapper">
+
+    <!-- 结果映射 -->
+    <resultMap id="BaseResultMap" type="com.nyx.musicPlatform.entity.MusicPlayHistory">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="user_id" property="userId" jdbcType="BIGINT"/>
+        <result column="music_id" property="musicId" jdbcType="BIGINT"/>
+        <result column="play_time" property="playTime" jdbcType="TIMESTAMP"/>
+        <result column="play_duration" property="playDuration" jdbcType="INTEGER"/>
+        <result column="play_position" property="playPosition" jdbcType="INTEGER"/>
+    </resultMap>
+
+    <!-- 基础字段 -->
+    <sql id="Base_Column_List">
+        id, user_id, music_id, play_time, play_duration, play_position
+    </sql>
+
+    <!-- 根据用户ID获取播放历史列表 -->
+    <select id="getPlayHistoryByUserId" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM ql_music_play_history
+        WHERE user_id = #{userId}
+        ORDER BY play_time DESC
+    </select>
+
+    <!-- 获取用户最近播放的音乐ID列表 -->
+    <select id="getRecentPlayMusicIds" resultType="java.lang.Long">
+        SELECT DISTINCT music_id
+        FROM ql_music_play_history
+        WHERE user_id = #{userId}
+        ORDER BY play_time DESC
+        LIMIT #{limit}
+    </select>
+
+    <!-- 插入播放历史记录 -->
+    <insert id="insert" parameterType="com.nyx.musicPlatform.entity.MusicPlayHistory">
+        INSERT INTO ql_music_play_history (user_id, music_id, play_time, play_duration, play_position)
+        VALUES (#{userId}, #{musicId}, #{playTime}, #{playDuration}, #{playPosition})
+    </insert>
+
+    <!-- 更新播放历史记录 -->
+    <update id="updateById" parameterType="com.nyx.musicPlatform.entity.MusicPlayHistory">
+        UPDATE ql_music_play_history
+        SET play_duration = #{playDuration},
+            play_position = #{playPosition}
+        WHERE id = #{id}
+    </update>
+
+    <!-- 根据用户ID和音乐ID查找最近的播放记录 -->
+    <select id="getLatestByUserIdAndMusicId" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM ql_music_play_history
+        WHERE user_id = #{userId} AND music_id = #{musicId}
+        ORDER BY play_time DESC
+        LIMIT 1
+    </select>
+
+    <!-- 清空用户播放历史 -->
+    <delete id="deleteByUserId">
+        DELETE FROM ql_music_play_history
+        WHERE user_id = #{userId}
+    </delete>
+
+    <!-- 根据音乐ID删除播放历史 -->
+    <delete id="deleteByMusicId">
+        DELETE FROM ql_music_play_history
+        WHERE music_id = #{musicId}
+    </delete>
+
+    <!-- 获取用户播放历史数量 -->
+    <select id="countByUserId" resultType="java.lang.Long">
+        SELECT COUNT(1)
+        FROM ql_music_play_history
+        WHERE user_id = #{userId}
+    </select>
+
+    <!-- 获取音乐播放次数 -->
+    <select id="countByMusicId" resultType="java.lang.Long">
+        SELECT COUNT(1)
+        FROM ql_music_play_history
+        WHERE music_id = #{musicId}
+    </select>
+
+    <!-- 删除过期的播放历史记录（保留最近N条） -->
+    <delete id="deleteOldRecords">
+        DELETE FROM ql_music_play_history
+        WHERE user_id = #{userId}
+        AND id NOT IN (
+            SELECT id FROM (
+                SELECT id
+                FROM ql_music_play_history
+                WHERE user_id = #{userId}
+                ORDER BY play_time DESC
+                LIMIT #{keepCount}
+            ) AS recent_records
+        )
+    </delete>
+
+</mapper>

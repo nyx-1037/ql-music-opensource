@@ -1,0 +1,40 @@
+spring:
+  # H2数据库配置（用于测试）
+  datasource:
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=MySQL
+    username: sa
+    password: 
+    
+  # SQL初始化配置
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:sql/schema-h2.sql
+      data-locations: 
+      encoding: utf-8
+      
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+      
+# MyBatis-Plus配置
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    db-config:
+      id-type: auto
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+  mapper-locations: classpath*:/mapper/**/*.xml
+  
+# 日志配置
+logging:
+  level:
+    com.nyx.musicPlatform: debug
+    org.springframework.sql: debug
+    org.springframework.jdbc: debug

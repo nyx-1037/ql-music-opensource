@@ -1,0 +1,385 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.nyx.musicPlatform.mapper.MusicMapper">
+
+    <!-- 结果映射 -->
+    <resultMap id="BaseResultMap" type="com.nyx.musicPlatform.entity.Music">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="title" property="title" jdbcType="VARCHAR"/>
+        <result column="artist" property="artist" jdbcType="VARCHAR"/>
+        <result column="album" property="album" jdbcType="VARCHAR"/>
+        <result column="duration" property="duration" jdbcType="INTEGER"/>
+        <result column="file_path" property="filePath" jdbcType="VARCHAR"/>
+        <result column="file_name" property="fileName" jdbcType="VARCHAR"/>
+        <result column="original_file_name" property="originalFileName" jdbcType="VARCHAR"/>
+        <result column="file_size" property="fileSize" jdbcType="BIGINT"/>
+        <result column="file_type" property="fileType" jdbcType="VARCHAR"/>
+        <result column="upload_user_id" property="userId" jdbcType="BIGINT"/>
+        <result column="play_count" property="playCount" jdbcType="BIGINT"/>
+        <result column="status" property="status" jdbcType="TINYINT"/>
+        <result column="create_time" property="createTime" jdbcType="TIMESTAMP"/>
+        <result column="update_time" property="updateTime" jdbcType="TIMESTAMP"/>
+        <result column="is_deleted" property="isDeleted" jdbcType="TINYINT"/>
+    </resultMap>
+
+    <!-- 音乐详情结果映射（包含用户信息） -->
+    <resultMap id="MusicDetailResultMap" type="com.nyx.musicPlatform.entity.Music">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="title" property="title" jdbcType="VARCHAR"/>
+        <result column="artist" property="artist" jdbcType="VARCHAR"/>
+        <result column="album" property="album" jdbcType="VARCHAR"/>
+        <result column="duration" property="duration" jdbcType="INTEGER"/>
+        <result column="file_path" property="filePath" jdbcType="VARCHAR"/>
+        <result column="file_name" property="fileName" jdbcType="VARCHAR"/>
+        <result column="original_file_name" property="originalFileName" jdbcType="VARCHAR"/>
+        <result column="file_size" property="fileSize" jdbcType="BIGINT"/>
+        <result column="file_type" property="fileType" jdbcType="VARCHAR"/>
+        <result column="upload_user_id" property="userId" jdbcType="BIGINT"/>
+        <result column="play_count" property="playCount" jdbcType="BIGINT"/>
+        <result column="status" property="status" jdbcType="TINYINT"/>
+        <result column="create_time" property="createTime" jdbcType="TIMESTAMP"/>
+        <result column="update_time" property="updateTime" jdbcType="TIMESTAMP"/>
+        <result column="is_deleted" property="isDeleted" jdbcType="TINYINT"/>
+        <!-- 扩展字段 -->
+        <result column="upload_username" property="uploadUsername" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <!-- 基础字段 -->
+    <sql id="Base_Column_List">
+        id, title, artist, album, duration, file_path, file_name, 
+        original_file_name, file_size, file_type, upload_user_id, 
+        play_count, status, create_time, update_time, is_deleted
+    </sql>
+
+    <!-- 音乐详情字段（包含用户信息） -->
+    <sql id="Detail_Column_List">
+        m.id, m.title, m.artist, m.album, m.duration, m.file_path, m.file_name,
+        m.original_file_name, m.file_size, m.file_type, m.upload_user_id,
+        m.play_count, m.status, m.create_time, m.update_time, m.is_deleted,
+        u.username AS upload_username
+    </sql>
+
+    <!-- 根据用户ID分页查询音乐 -->
+    <select id="selectByUserIdPage" resultMap="BaseResultMap">
+        SELECT 
+        <include refid="Base_Column_List"/>
+        FROM ql_music
+        WHERE upload_user_id = #{userId} AND is_deleted = 0
+        <if test="status != null">
+            AND status = #{status}
+        </if>
+        ORDER BY create_time DESC
+    </select>
+
+    <!-- 根据标题模糊查询 -->
+    <select id="selectByTitleLike" resultMap="MusicDetailResultMap">
+        SELECT 
+        <include refid="Detail_Column_List"/>
+        FROM ql_music m
+        INNER JOIN ql_user u ON m.upload_user_id = u.id
+        WHERE m.title LIKE CONCAT('%', #{title}, '%')
+          AND m.status = 1
+          AND m.is_deleted = 0
+          AND u.is_deleted = 0
+        ORDER BY m.play_count DESC, m.create_time DESC
+    </select>
+
+    <!-- 根据艺术家模糊查询 -->
+    <select id="selectByArtistLike" resultMap="MusicDetailResultMap">
+        SELECT 
+        <include refid="Detail_Column_List"/>
+        FROM ql_music m
+        INNER JOIN ql_user u ON m.upload_user_id = u.id
+        WHERE m.artist LIKE CONCAT('%', #{artist}, '%')
+          AND m.status = 1
+          AND m.is_deleted = 0
+          AND u.is_deleted = 0
+        ORDER BY m.play_count DESC, m.create_time DESC
+    </select>
+
+    <!-- 根据专辑模糊查询 -->
+    <select id="selectByAlbumLike" resultMap="MusicDetailResultMap">
+        SELECT 
+        <include refid="Detail_Column_List"/>
+        FROM ql_music m
+        INNER JOIN ql_user u ON m.upload_user_id = u.id
+        WHERE m.album LIKE CONCAT('%', #{album}, '%')
+          AND m.status = 1
+          AND m.is_deleted = 0
+          AND u.is_deleted = 0
+        ORDER BY m.play_count DESC, m.create_time DESC
+    </select>
+
+    <!-- 获取热门音乐 -->
+    <select id="selectHotMusic" resultMap="MusicDetailResultMap">
+        SELECT 
+        <include refid="Detail_Column_List"/>
+        FROM ql_music m
+        INNER JOIN ql_user u ON m.upload_user_id = u.id
+        WHERE m.status = 1
+          AND m.is_deleted = 0
+          AND u.is_deleted = 0
+        ORDER BY m.play_count DESC, m.create_time DESC
+        LIMIT #{limit}
+    </select>
+
+    <!-- 获取最新音乐 -->
+    <select id="selectLatestMusic" resultMap="MusicDetailResultMap">
+        SELECT 
+        <include refid="Detail_Column_List"/>
+        FROM ql_music m
+        INNER JOIN ql_user u ON m.upload_user_id = u.id
+        WHERE m.status = 1
+          AND m.is_deleted = 0
+          AND u.is_deleted = 0
+        ORDER BY m.create_time DESC
+        LIMIT #{limit}
+    </select>
+
+    <!-- 增加播放次数 -->
+    <update id="incrementPlayCount">
+        UPDATE ql_music
+        SET play_count = play_count + 1, update_time = NOW()
+        WHERE id = #{musicId} AND status = 1 AND is_deleted = 0
+    </update>
+
+    <!-- 根据文件名查询音乐 -->
+    <select id="selectByFileName" parameterType="java.lang.String" resultMap="BaseResultMap">
+        SELECT 
+        <include refid="Base_Column_List"/>
+        FROM ql_music
+        WHERE file_name = #{fileName} AND is_deleted = 0
+    </select>
+
+    <!-- 检查音乐是否存在 -->
+    <select id="existsById" parameterType="java.lang.Long" resultType="java.lang.Boolean">
+        SELECT COUNT(1) > 0
+        FROM ql_music
+        WHERE id = #{musicId} AND is_deleted = 0
+    </select>
+
+    <!-- 获取用户音乐总数 -->
+    <select id="countByUserId" parameterType="java.lang.Long" resultType="java.lang.Long">
+        SELECT COUNT(1)
+        FROM ql_music
+        WHERE upload_user_id = #{userId} AND is_deleted = 0
+    </select>
+
+    <!-- 获取系统音乐总数 -->
+    <select id="countByStatus" resultType="java.lang.Long">
+        SELECT COUNT(1)
+        FROM ql_music
+        WHERE is_deleted = 0
+        <if test="status != null">
+            AND status = #{status}
+        </if>
+    </select>
+
+    <!-- 根据关键词搜索音乐 -->
+    <select id="searchByKeyword" resultMap="MusicDetailResultMap">
+        SELECT 
+        <include refid="Detail_Column_List"/>
+        FROM ql_music m
+        INNER JOIN ql_user u ON m.upload_user_id = u.id
+        <where>
+            m.status = 1
+            AND m.is_deleted = 0
+            AND u.is_deleted = 0
+            <if test="keyword != null and keyword != ''">
+                AND (
+                    m.title LIKE CONCAT('%', #{keyword}, '%')
+                    OR m.artist LIKE CONCAT('%', #{keyword}, '%')
+                    OR m.album LIKE CONCAT('%', #{keyword}, '%')
+                )
+            </if>
+        </where>
+        ORDER BY 
+        <choose>
+            <when test="orderBy != null and orderBy != ''">
+                ${orderBy}
+            </when>
+            <otherwise>
+                m.play_count DESC, m.create_time DESC
+            </otherwise>
+        </choose>
+    </select>
+
+    <!-- 获取推荐音乐 -->
+    <select id="selectRecommendMusic" resultMap="MusicDetailResultMap">
+        SELECT 
+        <include refid="Detail_Column_List"/>
+        FROM ql_music m
+        INNER JOIN ql_user u ON m.upload_user_id = u.id
+        WHERE m.status = 1
+          AND m.is_deleted = 0
+          AND u.is_deleted = 0
+          AND m.upload_user_id != #{userId}
+        ORDER BY 
+            (m.play_count * 0.7 + RAND() * 0.3) DESC,
+            m.create_time DESC
+        LIMIT #{limit}
+    </select>
+
+    <!-- 批量逻辑删除音乐 -->
+    <update id="batchLogicDelete">
+        UPDATE ql_music
+        SET is_deleted = 1, update_time = NOW()
+        WHERE id IN
+        <foreach collection="musicIds" item="musicId" open="(" separator="," close=")">
+            #{musicId}
+        </foreach>
+        AND is_deleted = 0
+    </update>
+
+    <!-- 批量更新音乐状态 -->
+    <update id="batchUpdateStatus">
+        UPDATE ql_music
+        SET status = #{status}, update_time = NOW()
+        WHERE id IN
+        <foreach collection="musicIds" item="musicId" open="(" separator="," close=")">
+            #{musicId}
+        </foreach>
+        AND is_deleted = 0
+    </update>
+
+    <!-- 获取音乐统计信息 -->
+    <select id="getMusicStatistics" resultType="java.util.Map">
+        SELECT 
+            COUNT(1) AS totalMusic,
+            SUM(CASE WHEN status = 1 THEN 1 ELSE 0 END) AS activeMusic,
+            SUM(CASE WHEN status = 0 THEN 1 ELSE 0 END) AS inactiveMusic,
+            SUM(play_count) AS totalPlayCount,
+            SUM(CASE WHEN DATE(create_time) = CURDATE() THEN 1 ELSE 0 END) AS todayNewMusic,
+            SUM(CASE WHEN DATE(create_time) = CURDATE() THEN play_count ELSE 0 END) AS todayPlayCount
+        FROM ql_music
+        WHERE is_deleted = 0
+    </select>
+
+    <!-- 获取用户音乐统计信息 -->
+    <select id="getUserMusicStatistics" parameterType="java.lang.Long" resultType="java.util.Map">
+        SELECT 
+            COUNT(1) AS userMusicCount,
+            SUM(play_count) AS userTotalPlayCount,
+            SUM(file_size) AS userTotalFileSize,
+            SUM(CASE WHEN DATE(create_time) = CURDATE() THEN 1 ELSE 0 END) AS userTodayNewMusic
+        FROM ql_music
+        WHERE upload_user_id = #{userId} AND is_deleted = 0
+    </select>
+
+    <!-- 获取音乐详情（包含用户信息） -->
+    <select id="selectMusicDetailById" parameterType="java.lang.Long" resultMap="MusicDetailResultMap">
+        SELECT 
+        <include refid="Detail_Column_List"/>
+        FROM ql_music m
+        INNER JOIN ql_user u ON m.upload_user_id = u.id
+        WHERE m.id = #{musicId}
+          AND m.is_deleted = 0
+          AND u.is_deleted = 0
+    </select>
+
+    <!-- 检查用户是否有权限操作音乐 -->
+    <select id="checkUserPermission" resultType="java.lang.Boolean">
+        SELECT COUNT(1) > 0
+        FROM ql_music
+        WHERE id = #{musicId}
+          AND upload_user_id = #{userId}
+          AND is_deleted = 0
+    </select>
+
+    <!-- 获取相似音乐（基于艺术家和专辑） -->
+    <select id="selectSimilarMusic" resultMap="MusicDetailResultMap">
+        SELECT 
+        <include refid="Detail_Column_List"/>
+        FROM ql_music m
+        INNER JOIN ql_user u ON m.upload_user_id = u.id
+        WHERE m.id != #{musicId}
+          AND m.status = 1
+          AND m.is_deleted = 0
+          AND u.is_deleted = 0
+          AND (
+              m.artist = #{artist}
+              OR m.album = #{album}
+          )
+        ORDER BY 
+            CASE 
+                WHEN m.artist = #{artist} AND m.album = #{album} THEN 1
+                WHEN m.artist = #{artist} THEN 2
+                WHEN m.album = #{album} THEN 3
+                ELSE 4
+            END,
+            m.play_count DESC
+        LIMIT #{limit}
+    </select>
+
+    <!-- 获取用户最近播放的音乐 -->
+    <select id="selectUserRecentMusic" resultMap="MusicDetailResultMap">
+        SELECT DISTINCT
+        <include refid="Detail_Column_List"/>
+        FROM ql_music m
+        INNER JOIN ql_user u ON m.upload_user_id = u.id
+        WHERE m.upload_user_id = #{userId}
+          AND m.status = 1
+          AND m.is_deleted = 0
+          AND u.is_deleted = 0
+        ORDER BY m.update_time DESC
+        LIMIT #{limit}
+    </select>
+
+    <!-- 获取热门艺术家 -->
+    <select id="selectHotArtists" resultType="java.util.Map">
+        SELECT 
+            artist,
+            COUNT(1) AS musicCount,
+            SUM(play_count) AS totalPlayCount
+        FROM ql_music
+        WHERE status = 1 AND is_deleted = 0
+        GROUP BY artist
+        HAVING musicCount > 0
+        ORDER BY totalPlayCount DESC, musicCount DESC
+        LIMIT #{limit}
+    </select>
+
+    <!-- 获取热门专辑 -->
+    <select id="selectHotAlbums" resultType="java.util.Map">
+        SELECT 
+            album,
+            artist,
+            COUNT(1) AS musicCount,
+            SUM(play_count) AS totalPlayCount
+        FROM ql_music
+        WHERE album IS NOT NULL 
+          AND album != ''
+          AND status = 1 
+          AND is_deleted = 0
+        GROUP BY album, artist
+        HAVING musicCount > 0
+        ORDER BY totalPlayCount DESC, musicCount DESC
+        LIMIT #{limit}
+    </select>
+
+    <!-- 检查文件名是否已存在 -->
+    <select id="existsByFileName" parameterType="java.lang.String" resultType="java.lang.Boolean">
+        SELECT COUNT(1) > 0
+        FROM ql_music
+        WHERE file_name = #{fileName} AND is_deleted = 0
+    </select>
+
+    <!-- 根据文件路径删除音乐记录 -->
+    <update id="deleteByFilePath">
+        UPDATE ql_music
+        SET is_deleted = 1, update_time = NOW()
+        WHERE file_path = #{filePath} AND is_deleted = 0
+    </update>
+
+    <!-- 清理无效的音乐记录（文件不存在） -->
+    <update id="cleanupInvalidRecords">
+        UPDATE ql_music
+        SET is_deleted = 1, update_time = NOW()
+        WHERE is_deleted = 0
+          AND id IN
+        <foreach collection="invalidMusicIds" item="musicId" open="(" separator="," close=")">
+            #{musicId}
+        </foreach>
+    </update>
+
+</mapper>

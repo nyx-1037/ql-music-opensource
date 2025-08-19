@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.musicmanager.system.mapper.QlMusicCategoryRelationMapper">
+    
+    <resultMap type="QlMusicCategoryRelation" id="QlMusicCategoryRelationResult">
+        <result property="id"    column="id"    />
+        <result property="musicId"    column="music_id"    />
+        <result property="categoryId"    column="category_id"    />
+        <result property="createTime"    column="create_time"    />
+    </resultMap>
+
+    <sql id="selectQlMusicCategoryRelationVo">
+        select id, music_id, category_id, create_time from ql_music_category_relation
+    </sql>
+
+    <select id="selectQlMusicCategoryRelationList" parameterType="QlMusicCategoryRelation" resultMap="QlMusicCategoryRelationResult">
+        <include refid="selectQlMusicCategoryRelationVo"/>
+        <where>  
+            <if test="musicId != null "> and music_id = #{musicId}</if>
+            <if test="categoryId != null "> and category_id = #{categoryId}</if>
+        </where>
+    </select>
+    
+    <select id="selectQlMusicCategoryRelationById" parameterType="Long" resultMap="QlMusicCategoryRelationResult">
+        <include refid="selectQlMusicCategoryRelationVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertQlMusicCategoryRelation" parameterType="QlMusicCategoryRelation" useGeneratedKeys="true" keyProperty="id">
+        insert into ql_music_category_relation
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="musicId != null">music_id,</if>
+            <if test="categoryId != null">category_id,</if>
+            <if test="createTime != null">create_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="musicId != null">#{musicId},</if>
+            <if test="categoryId != null">#{categoryId},</if>
+            <if test="createTime != null">#{createTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updateQlMusicCategoryRelation" parameterType="QlMusicCategoryRelation">
+        update ql_music_category_relation
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="musicId != null">music_id = #{musicId},</if>
+            <if test="categoryId != null">category_id = #{categoryId},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteQlMusicCategoryRelationById" parameterType="Long">
+        delete from ql_music_category_relation where id = #{id}
+    </delete>
+
+    <delete id="deleteQlMusicCategoryRelationByIds" parameterType="String">
+        delete from ql_music_category_relation where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

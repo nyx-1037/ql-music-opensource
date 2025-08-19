@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.nyx.musicPlatform.mapper.BannerMapper">
+
+    <!-- Banner结果映射 -->
+    <resultMap id="BannerResultMap" type="com.nyx.musicPlatform.entity.Banner">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="title" property="title" jdbcType="VARCHAR"/>
+        <result column="description" property="description" jdbcType="VARCHAR"/>
+        <result column="image_url" property="imageUrl" jdbcType="VARCHAR"/>
+        <result column="button_text" property="buttonText" jdbcType="VARCHAR"/>
+        <result column="action_type" property="actionType" jdbcType="VARCHAR"/>
+        <result column="action_url" property="actionUrl" jdbcType="VARCHAR"/>
+        <result column="sort_order" property="sortOrder" jdbcType="INTEGER"/>
+        <result column="status" property="status" jdbcType="INTEGER"/>
+        <result column="create_time" property="createTime" jdbcType="TIMESTAMP"/>
+        <result column="update_time" property="updateTime" jdbcType="TIMESTAMP"/>
+        <result column="creator_id" property="creatorId" jdbcType="BIGINT"/>
+    </resultMap>
+
+    <!-- 获取启用状态的Banner列表 -->
+    <select id="getActiveBanners" resultMap="BannerResultMap">
+        SELECT 
+            id, title, description, image_url, button_text, 
+            action_type, action_url, sort_order, status, 
+            create_time, update_time, creator_id
+        FROM ql_banner 
+        WHERE status = 1 
+        ORDER BY sort_order ASC, create_time DESC 
+        LIMIT 10
+    </select>
+
+    <!-- 获取所有Banner列表 -->
+    <select id="getAllBanners" resultMap="BannerResultMap">
+        SELECT 
+            id, title, description, image_url, button_text, 
+            action_type, action_url, sort_order, status, 
+            create_time, update_time, creator_id
+        FROM ql_banner 
+        ORDER BY sort_order ASC, create_time DESC
+    </select>
+
+</mapper>
