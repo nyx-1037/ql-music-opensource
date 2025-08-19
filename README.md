@@ -365,21 +365,21 @@ export JWT_SECRET=your_jwt_secret
 ```
 ## 项目展示图片(数据仅供展示，实际数据请自行上传):
 
-![图片1](E:\opensource\music-platform\assert\图片1.png)
+![图片1](https://github.com/nyx-1037/ql-music-opensource/blob/master/assert/%E5%9B%BE%E7%89%871.png?raw=true)
 
-![图片2](E:\opensource\music-platform\assert\图片2.png)
+![图片2](https://github.com/nyx-1037/ql-music-opensource/blob/master/assert/%E5%9B%BE%E7%89%872.png?raw=true)
 
-![图片3](E:\opensource\music-platform\assert\图片3.png)
+![图片3](https://github.com/nyx-1037/ql-music-opensource/blob/master/assert/%E5%9B%BE%E7%89%873.png?raw=true)
 
-![图片4](E:\opensource\music-platform\assert\图片4.png)
+![图片4](https://github.com/nyx-1037/ql-music-opensource/blob/master/assert/%E5%9B%BE%E7%89%874.png?raw=true)
 
-![图片5](E:\opensource\music-platform\assert\图片5.png)
+![图片5](https://github.com/nyx-1037/ql-music-opensource/blob/master/assert/%E5%9B%BE%E7%89%875.png?raw=true)
 
-![图片6](E:\opensource\music-platform\assert\图片6.png)
+![图片6](https://github.com/nyx-1037/ql-music-opensource/blob/master/assert/%E5%9B%BE%E7%89%876.png?raw=true)
 
-![图片7](E:\opensource\music-platform\assert\图片7.png)
+![图片7](https://github.com/nyx-1037/ql-music-opensource/blob/master/assert/%E5%9B%BE%E7%89%877.png?raw=true)
 
-![图片8](E:\opensource\music-platform\assert\图片8.png)
+![图片8](https://github.com/nyx-1037/ql-music-opensource/blob/master/assert/%E5%9B%BE%E7%89%878.png?raw=true)
 
 
 
